@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@+id/nav_home">
+
+    <fragment
+        android:id="@+id/nav_home"
+        android:name="com.example.hshmobile.ui.home.HomeFragment"
+        android:label="@string/menu_home"
+        tools:layout="@layout/fragment_home" />
+
+    <fragment
+        android:id="@+id/nav_shared"
+        android:name="com.example.hshmobile.ui.shared.SharedFragment"
+        android:label="@string/menu_gallery"
+        tools:layout="@layout/fragment_shared" />
+
+    <fragment
+        android:id="@+id/nav_generate_password"
+        android:name="com.example.hshmobile.ui.genpassword.PwdGenFragment"
+        android:label="Generate Password"
+        tools:layout="@layout/fragment_genpassword" />
+
+    <fragment
+        android:id="@+id/nav_history"
+        android:name="com.example.hshmobile.ui.history.HistoryFragment"
+        android:label="Password History"
+        tools:layout="@layout/fragment_history" />
+
+    <fragment
+        android:id="@+id/nav_share"
+        android:name="com.example.hshmobile.ui.settings.SettingsFragment"
+        android:label="@string/menu_settings"
+        tools:layout="@layout/fragment_settings" />
+
+    <fragment
+        android:id="@+id/nav_logout"
+        android:name="com.example.hshmobile.ui.send.SendFragment"
+        android:label="@string/menu_logout"
+        tools:layout="@layout/fragment_send" />
+</navigation>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_home"
+            android:icon="@drawable/outline_lock_black_20"
+            android:title="@string/menu_home" />
+        <item
+            android:id="@+id/nav_shared"
+            android:icon="@drawable/outline_share_black_20"
+            android:title="@string/menu_gallery" />
+        <item
+            android:id="@+id/nav_generate_password"
+            android:icon="@drawable/outline_change_circle_black_20"
+            android:title="Generate Password" />
+        <item
+            android:id="@+id/nav_history"
+            android:icon="@drawable/outline_history_black_20"
+            android:title="History" />
+    </group>
+
+    <item android:title="Settings">
+        <menu>
+            <item
+                android:id="@+id/nav_share"
+                android:icon="@drawable/outline_settings_black_20"
+                android:title="@string/menu_settings" />
+            <item
+                android:id="@+id/nav_logout"
+                android:icon="@drawable/outline_logout_20"
+                android:title="@string/menu_logout" />
+        </menu>
+    </item>
+
+</menu>
