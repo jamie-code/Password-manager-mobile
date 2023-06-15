@@ -4,9 +4,10 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 public class CredentialManager {
-    private static final String PREFS_NAME = "PasswordPrefs";
-    private static final String SALT_KEY = "salt";
-    private static final String HASH_KEY = "hash";
+    private static final String PREFS_NAME = "B_PasswordManager";
+    private static final String VAULT_KEY = "vaultKey";
+    private static final String EMAIL = "email";
+    private static final String SESSION_ID = "sessionId";
 
     private static CredentialManager instance;
     private SharedPreferences sharedPreferences;
@@ -22,19 +23,23 @@ public class CredentialManager {
         return instance;
     }
 
-    public void saveCredentials(String salt, String hash) {
+    public void saveCredentials(String vaultKey, String email, String sessionId) {
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(SALT_KEY, salt);
-        editor.putString(HASH_KEY, hash);
+        editor.putString(VAULT_KEY, vaultKey);
+        editor.putString(EMAIL, email);
+        editor.putString(SESSION_ID, sessionId);
         editor.apply();
     }
 
-    public String getSalt() {
-        return sharedPreferences.getString(SALT_KEY, "");
+    public String getVaultKey() {
+        return sharedPreferences.getString(VAULT_KEY, "");
     }
 
-    public String getHash() {
-        return sharedPreferences.getString(HASH_KEY, "");
+    public String getEmail() {
+        return sharedPreferences.getString(EMAIL, "");
+    }
+
+    public String getSessionId() {
+        return sharedPreferences.getString(SESSION_ID, "");
     }
 }
-

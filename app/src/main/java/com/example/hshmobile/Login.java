@@ -15,9 +15,14 @@ import androidx.appcompat.widget.Toolbar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
+import org.bouncycastle.crypto.engines.AESEngine;
 import org.bouncycastle.crypto.generators.Argon2BytesGenerator;
+import org.bouncycastle.crypto.modes.SICBlockCipher;
 import org.bouncycastle.crypto.params.Argon2Parameters;
+import org.bouncycastle.crypto.params.KeyParameter;
+import org.bouncycastle.crypto.params.ParametersWithIV;
 import org.bouncycastle.util.encoders.Base64;
+import org.bouncycastle.util.encoders.Hex;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -32,9 +37,10 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 
 public class Login extends AppCompatActivity {
-
+    private CredentialManager credentialManager;
     Button btnLogin;
     TextView email, pwd;
     private String rtoken;
@@ -133,6 +139,26 @@ public class Login extends AppCompatActivity {
             String encodedHash = "$argon2id$v=19$m="+memory+",t="+time+",p="+parrallelism+"$" + Base64.toBase64String(salt.getBytes(StandardCharsets.UTF_8)).replaceAll("=+$", "") + "$" + Base64.toBase64String(result).replaceAll("=+$", "");
             return encodedHash;
         }
+        public String Argon2Hash(String password, String salt, int outputLength, int time){
+            int parrallelism = 1;
+            int memory = 65536;
+            salt = salt.trim();
+            password = password.trim();
+            Argon2Parameters parameters = new Argon2Parameters.Builder(Argon2Parameters.ARGON2_id)
+                    .withSalt(salt.getBytes(StandardCharsets.UTF_8)) // byte[] salt
+                    //.withPassword(usrPWD) // byte[] password
+                    .withParallelism(parrallelism) // Number of threads
+                    .withIterations(time) // Number of iterations
+                    .withMemoryAsKB(memory) // Memory in kilobytes
+                    //.withOutputLength(128) // Output hash length in bytes
+                    .build();
+            Argon2BytesGenerator generator = new Argon2BytesGenerator();
+            generator.init(parameters);
+            byte[] result = new byte[outputLength];
+            generator.generateBytes(password.getBytes(StandardCharsets.UTF_8), result, 0, result.length);
+            String Hash = Arrays.toString(result);
+            return Hash;
+        }
         public boolean isValid(String json) {
             try {
                 new JSONObject(json);
@@ -145,8 +171,8 @@ public class Login extends AppCompatActivity {
         protected Void doInBackground(Void... params) {
 
             try {
-                String Hash1 = Argon2Encode(usrPWD, usrEmail, 128, 5);
-                String Hash2 = calculateSHA512Hash(Hash1);
+                String Vaulthashkey = Argon2Encode(usrPWD, usrEmail, 128, 5);
+                String Hash2 = calculateSHA512Hash(Vaulthashkey);
                 String Hash3 = Argon2Encode(Hash2, usrPWD, 128, 3);
 
                 URL url = new URL("https://api.jamiez.co.uk/pwdmanager/login");
@@ -180,9 +206,45 @@ public class Login extends AppCompatActivity {
                         bufferedReader.close();
                         String ReplyFromServer = response.toString();
                         if(isValid(ReplyFromServer)){//JSON is returned
-                            //Check if 2FA
                             JSONObject jsonReply = new JSONObject(ReplyFromServer);
+                            //Argon2 for AES hashkey
+                            String sessionid = jsonReply.getString("sessionid");
+                            String sessionkey = jsonReply.getString("sessionkey");
+                            String AESencryptionkeyarray = Argon2Hash(sessionkey, sessionid, 32, 3);
+                            byte[] encryptionKey = Hex.decode(AESencryptionkeyarray);//Encrypted key
+                            byte[] textBytes = Vaulthashkey.getBytes(StandardCharsets.UTF_8);//To be encrypted
+
+                            // Initialize the AES cipher in counter mode (CTR)
+                            SICBlockCipher aesCtr = new SICBlockCipher(new AESEngine());
+                            ParametersWithIV aesparams = new ParametersWithIV(new KeyParameter(encryptionKey), new byte[aesCtr.getBlockSize() / 8]);//convert from bits to bytes
+                            aesCtr.init(true, aesparams);
+
+                            // Encrypt the text bytes
+                            byte[] encryptedBytes = new byte[textBytes.length];
+                            aesCtr.processBytes(textBytes, 0, textBytes.length, encryptedBytes, 0);
+
+                            // Convert the encrypted bytes to hexadecimal string
+                            String encryptedHex = Hex.toHexString(encryptedBytes);
+
+
+                            //Save creds
+                            Login.runOnUI(new Runnable() {
+                                @Override
+                                public void run() {
+                                    credentialManager = CredentialManager.getInstance(Login.this);
+
+                                    // Save the credentials
+                                    credentialManager.saveCredentials(encryptedHex, usrEmail, sessionid);//Stores encrypted vault hash key, email and sessoionid
+                                }
+                            });
+                            //Check if 2FA
                             int verified = jsonReply.getInt("verified");
+                            if(verified==1){//No 2FA required
+
+                            } else {
+
+                            }
+
                         } else {//Error
                             Login.runOnUI(new Runnable() {
                                 public void run() {
